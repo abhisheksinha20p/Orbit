@@ -1,94 +1,103 @@
 # Orbit - Project Tracking System
 
-A streamlined project tracking system designed to help teams and individuals monitor tasks, manage deadlines, and visualize progress in real-time.
+A modern, streamlined project tracking system with a stunning glassmorphism UI, designed to help teams and individuals monitor tasks, manage deadlines, and visualize progress in real-time.
 
-## 🚀 Features
+![Orbit Dashboard](https://img.shields.io/badge/Status-Active-success)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-- **Project Management**: Full CRUD operations for projects
-- **Technology Tracking**: Manage and categorize technologies
-- **Many-to-Many Mapping**: Link projects with multiple technologies
-- **Advanced Search & Filtering**: Find projects by name, status, or technology
-- **Deployment Status Monitor**: Track deployment health and status
-- **Real-time Updates**: Kafka-based event streaming
-- **Caching**: Redis for optimized performance
-- **Authentication**: JWT-based secure authentication
+## ✨ Features
+
+### 🎨 Modern UI/UX
+- **Glassmorphism Design** - Stunning glass-effect UI with vibrant gradients
+- **Interactive Dashboard** - Real-time analytics with Pie, Bar, and Line charts
+- **Responsive Design** - Seamless experience across desktop, tablet, and mobile
+- **Smooth Animations** - Framer Motion powered transitions and micro-interactions
+- **Dark Mode Ready** - Beautiful gradient backgrounds with glassmorphism effects
+
+### 📊 Project Management
+- **Full CRUD Operations** - Create, read, update, and delete projects
+- **Advanced Filtering** - Search by name, status, or technology
+- **Status Tracking** - Planning, Active, Completed, Archived states
+- **Technology Mapping** - Link projects with multiple technologies
+- **Visual Analytics** - Charts showing project distribution and trends
+
+### 🔐 Security & Performance
+- **JWT Authentication** - Secure token-based authentication
+- **Redis Caching** - Optimized performance with intelligent caching
+- **Rate Limiting** - Protection against abuse (100 req/15min)
+- **Password Hashing** - bcrypt with salt rounds
+- **Input Validation** - Express-validator for all inputs
+
+### 🚀 Real-time Features
+- **Kafka Event Streaming** - Real-time updates and notifications
+- **Toast Notifications** - Instant feedback for all actions
+- **Live Dashboard** - Auto-updating statistics and charts
 
 ## 🏗️ Architecture
 
 ### Tech Stack
 
 **Frontend:**
-- React 18
-- Vite
-- Tailwind CSS
+- React 18 with Vite
+- Tailwind CSS (Custom Design System)
+- Framer Motion (Animations)
+- Recharts (Data Visualization)
 - Zustand (State Management)
 - React Query (Data Fetching)
-- Axios
+- React Hot Toast (Notifications)
+- Lucide React (Icons)
 
 **Backend:**
-- Node.js 18+
-- Express
-- MongoDB (Mongoose)
-- Redis (Caching)
+- Node.js 18+ with Express
+- MongoDB with Mongoose
+- Redis (Caching Layer)
 - Kafka (Event Streaming)
 - JWT Authentication
 - Winston (Logging)
+- Helmet (Security)
 
 **DevOps:**
 - Docker & Docker Compose
 - GitHub Actions (CI/CD)
-- Vercel (Frontend Deployment)
-- AWS EC2 (Backend Deployment)
+- Nginx (Production)
 
 ### System Architecture
 
 ```
-Frontend (Vercel) → API Gateway (Express) → Services (EC2)
-                           ↓                      ↓
-                      MongoDB Atlas          Redis Cache
-                                                  ↓
-                                            Kafka Queue
+┌─────────────┐      ┌──────────────┐      ┌─────────────┐
+│   Frontend  │─────▶│  API Gateway │─────▶│   Services  │
+│   (React)   │      │  (Express)   │      │   (Node.js) │
+└─────────────┘      └──────────────┘      └─────────────┘
+                            │                      │
+                            ▼                      ▼
+                     ┌──────────────┐      ┌─────────────┐
+                     │   MongoDB    │      │    Redis    │
+                     │   Database   │      │    Cache    │
+                     └──────────────┘      └─────────────┘
+                                                  │
+                                                  ▼
+                                           ┌─────────────┐
+                                           │    Kafka    │
+                                           │    Queue    │
+                                           └─────────────┘
 ```
 
-## 📦 Installation
+## 📦 Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
 - Docker & Docker Compose
-- MongoDB
-- Redis
-- Kafka (optional for development)
+- Git
 
-### Local Development Setup
+### Docker Setup (Recommended)
 
-1. **Clone the repository**
 ```bash
+# Clone the repository
 git clone <repository-url>
 cd Orbit
-```
 
-2. **Backend Setup**
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Edit .env with your configuration
-npm run dev
-```
-
-3. **Frontend Setup**
-```bash
-cd frontend
-npm install
-cp .env.example .env
-# Edit .env with your configuration
-npm run dev
-```
-
-### Docker Setup
-
-```bash
 # Start all services
 docker-compose up -d
 
@@ -99,57 +108,70 @@ docker-compose logs -f
 docker-compose down
 ```
 
+**Access the application:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000/api/v1
+- MongoDB: mongodb://localhost:21011/orbit
+- Redis: localhost:6379
+- Kafka: localhost:9092
+
+### Local Development Setup
+
+**Backend:**
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
 ## 🔧 Configuration
 
-### Backend Environment Variables
+### Environment Variables
 
-```env
-NODE_ENV=development
-PORT=5000
-MONGODB_URI=mongodb://localhost:21011/orbit
-JWT_SECRET=your-secret-key
-REDIS_HOST=localhost
-REDIS_PORT=6379
-KAFKA_BROKERS=localhost:9092
-CORS_ORIGIN=http://localhost:3000
+All environment variables are configured in `docker-compose.yml` for Docker deployments.
+
+**Backend (`docker-compose.yml`):**
+```yaml
+NODE_ENV: development
+PORT: 5000
+MONGODB_URI: mongodb://mongodb:27017/orbit
+JWT_SECRET: <your-secure-secret>
+JWT_EXPIRE: 7d
+REDIS_HOST: redis
+REDIS_PORT: 6379
+KAFKA_CLIENT_ID: orbit-api
+KAFKA_BROKERS: kafka:9092
+RATE_LIMIT_WINDOW_MS: 900000
+RATE_LIMIT_MAX_REQUESTS: 100
+CORS_ORIGIN: http://localhost:3000
 ```
 
-### Frontend Environment Variables
-
+**Frontend:**
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=/api/v1
 ```
-
-## 🌐 URLs
-
-### Development
-
-**Frontend:** `http://localhost:3000`
-
-**Backend API:** `http://localhost:5000/api`
-
-**API Base:** `http://localhost:5000/api/v1`
-
-### Infrastructure
-
-**MongoDB:** `mongodb://localhost:21011/orbit`
-
-**Redis:** `localhost:6379`
-
-**Kafka:** `localhost:9092`
-
-### Production
-
-**Frontend:** Vercel (configured in deployment)
-
-**Backend:** AWS EC2 (configured in deployment)
 
 ## 📚 API Documentation
 
+### Base URL
+```
+http://localhost:5000/api/v1
+```
+
 ### Authentication
 
-**POST** `/api/v1/auth/register`
-```json
+**Register**
+```http
+POST /auth/register
+Content-Type: application/json
+
 {
   "name": "John Doe",
   "email": "john@example.com",
@@ -157,60 +179,193 @@ VITE_API_URL=http://localhost:5000/api
 }
 ```
 
-**POST** `/api/v1/auth/login`
-```json
+**Login**
+```http
+POST /auth/login
+Content-Type: application/json
+
 {
   "email": "john@example.com",
   "password": "password123"
 }
 ```
 
-**GET** `/api/v1/auth/me` (Protected)
+**Get Current User**
+```http
+GET /auth/me
+Authorization: Bearer <token>
+```
 
 ### Projects
 
-**GET** `/api/v1/projects?search=&status=&technology=&page=1&limit=10` (Protected)
+**List Projects**
+```http
+GET /projects?search=&status=&page=1&limit=10
+Authorization: Bearer <token>
+```
 
-**GET** `/api/v1/projects/:id` (Protected)
+**Create Project**
+```http
+POST /projects
+Authorization: Bearer <token>
+Content-Type: application/json
 
-**POST** `/api/v1/projects` (Protected)
-```json
 {
   "name": "Project Name",
   "description": "Project description",
   "status": "active",
-  "technologies": ["tech_id_1", "tech_id_2"],
-  "deadline": "2024-12-31"
+  "technologies": ["tech_id_1", "tech_id_2"]
 }
 ```
 
-**PUT** `/api/v1/projects/:id` (Protected)
+**Update Project**
+```http
+PUT /projects/:id
+Authorization: Bearer <token>
+```
 
-**DELETE** `/api/v1/projects/:id` (Protected)
+**Delete Project**
+```http
+DELETE /projects/:id
+Authorization: Bearer <token>
+```
 
 ### Technologies
 
-**GET** `/api/v1/technologies?category=&search=` (Protected)
+**List Technologies**
+```http
+GET /technologies?category=&search=
+Authorization: Bearer <token>
+```
 
-**GET** `/api/v1/technologies/:id` (Protected)
+**Create Technology**
+```http
+POST /technologies
+Authorization: Bearer <token>
+Content-Type: application/json
 
-**POST** `/api/v1/technologies` (Protected)
-```json
 {
   "name": "React",
   "category": "frontend",
-  "version": "18.2.0",
-  "icon": "react-icon-url"
+  "version": "18.2.0"
 }
 ```
 
-**PUT** `/api/v1/technologies/:id` (Protected)
-
-**DELETE** `/api/v1/technologies/:id` (Protected)
-
 ### Health Check
 
-**GET** `/api/v1/health`
+```http
+GET /health
+```
+
+## 🎨 UI Features
+
+### Dashboard
+- **4 Animated Stat Cards** - Total Projects, Active, Completed, Technologies
+- **Pie Chart** - Project status distribution
+- **Bar Chart** - Technology categories breakdown
+- **Line Chart** - Project growth timeline
+- **Recent Projects Feed** - Latest 5 projects with status badges
+
+### Pages
+- **Login/Register** - Animated gradient backgrounds with glassmorphism cards
+- **Dashboard** - Comprehensive analytics and visualizations
+- **Projects** - Grid view with search, filter, and CRUD operations
+- **Technologies** - Category-based cards with color coding
+
+### Components
+- **Sidebar Navigation** - Responsive with mobile hamburger menu
+- **Modal System** - Smooth animations with glassmorphism backdrop
+- **Toast Notifications** - Real-time feedback for all actions
+- **Loading States** - Skeleton loaders for better UX
+
+## 🔒 Security Features
+
+- ✅ Helmet.js for HTTP headers security
+- ✅ Rate limiting (100 requests per 15 minutes)
+- ✅ JWT token authentication with secure secrets
+- ✅ Password hashing with bcrypt (12 salt rounds)
+- ✅ Input validation with express-validator
+- ✅ CORS configuration
+- ✅ Environment variable protection
+- ✅ MongoDB injection prevention
+
+## 📊 Database Schema
+
+### Users
+```javascript
+{
+  email: String (unique, indexed),
+  password: String (hashed),
+  name: String,
+  role: String (admin/user),
+  timestamps: true
+}
+```
+
+### Projects
+```javascript
+{
+  name: String (indexed, text search),
+  description: String (text search),
+  status: String (planning/active/completed/archived),
+  technologies: [ObjectId] (refs to Technology),
+  createdBy: ObjectId (ref to User),
+  timestamps: true
+}
+```
+
+### Technologies
+```javascript
+{
+  name: String (unique, indexed),
+  category: String (frontend/backend/database/devops),
+  version: String,
+  timestamps: true
+}
+```
+
+## 📖 Documentation
+
+Comprehensive documentation available in the `docs/` folder:
+
+- **[INDEX.md](docs/INDEX.md)** - Documentation navigation
+- **[SETUP.md](docs/SETUP.md)** - Detailed setup guide
+- **[API_DOCS.md](docs/API_DOCS.md)** - Complete API reference
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Production deployment
+- **[TECH_STACK.md](docs/TECH_STACK.md)** - Technology decisions
+- **[PROJECT_SUMMARY.md](docs/PROJECT_SUMMARY.md)** - Project overview
+- **[PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)** - Codebase structure
+
+## 🚀 Deployment
+
+### Using Docker (Production)
+
+```bash
+# Build and start production containers
+docker-compose -f docker-compose.prod.yml up -d
+
+# Update containers
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+### Manual Deployment
+
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed production deployment instructions.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
+
+### Branch Naming Convention
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation updates
+- `refactor/` - Code refactoring
 
 ## 🧪 Testing
 
@@ -222,115 +377,40 @@ npm test
 # Frontend tests
 cd frontend
 npm test
+
+# E2E tests
+npm run test:e2e
 ```
 
-## 🚀 Deployment
+## 📝 Changelog
 
-### Frontend (Vercel)
-
-1. Connect repository to Vercel
-2. Set environment variables
-3. Deploy automatically on push to main
-
-### Backend (AWS EC2)
-
-1. SSH into EC2 instance
-2. Clone repository
-3. Install dependencies
-4. Configure environment variables
-5. Use PM2 for process management
-
-```bash
-pm2 start src/server.js --name orbit-api
-pm2 save
-pm2 startup
-```
-
-## 🔒 Security Features
-
-- Helmet.js for HTTP headers security
-- Rate limiting (100 requests per 15 minutes)
-- JWT token authentication
-- Password hashing with bcrypt
-- Input validation with express-validator
-- CORS configuration
-- Environment variable protection
-
-## 📊 Database Schema
-
-### Users Collection
-- email (unique, indexed)
-- password (hashed)
-- name
-- role (admin/user)
-
-### Projects Collection
-- name (indexed, text search)
-- description (text search)
-- status (planning/active/completed/archived)
-- deploymentStatus (environment, url, health)
-- technologies (array of refs)
-- deadline
-- createdBy (ref to User)
-
-### Technologies Collection
-- name (unique, indexed)
-- category (frontend/backend/database/devops)
-- version
-- icon
-
-## 🔄 CI/CD Pipeline
-
-GitHub Actions workflow:
-1. Run tests on push/PR
-2. Build frontend and backend
-3. Deploy to Vercel (frontend)
-4. Deploy to EC2 (backend)
-
-## 📝 Best Practices Implemented
-
-- **12-Factor App Methodology**
-- **OWASP Security Guidelines**
-- **Clean Code Principles**
-- **RESTful API Design**
-- **Error Handling & Logging**
-- **Caching Strategy**
-- **Database Indexing**
-- **Code Splitting**
-- **Environment-based Configuration**
-
-## 📖 Documentation
-
-Detailed documentation available in the `docs/` folder:
-
-- **[INDEX.md](docs/INDEX.md)** - Documentation navigation guide
-- **[SETUP.md](docs/SETUP.md)** - Quick setup instructions
-- **[API_DOCS.md](docs/API_DOCS.md)** - Complete API reference
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Production deployment guide
-- **[TECH_STACK.md](docs/TECH_STACK.md)** - Technology justification
-- **[PROJECT_SUMMARY.md](docs/PROJECT_SUMMARY.md)** - Complete deliverables
-- **[PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)** - Codebase structure
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+### v1.0.0 (Latest)
+- ✨ Complete UI redesign with glassmorphism
+- 📊 Added interactive dashboard with charts
+- 🎨 Implemented modern design system
+- ✨ Added framer-motion animations
+- 🍞 Integrated toast notifications
+- 📱 Improved responsive design
+- 🔐 Enhanced security with strong JWT secrets
+- 🐛 Fixed login authentication issues
 
 ## 📄 License
 
-MIT License
+MIT License - see LICENSE file for details
 
 ## 👥 Authors
 
-Your Team
+Orbit Development Team
 
 ## 🙏 Acknowledgments
 
-- React Team
-- Express.js Team
-- MongoDB Team
+- React Team for the amazing framework
+- Tailwind CSS for the utility-first CSS
+- Recharts for beautiful charts
+- Framer Motion for smooth animations
+- MongoDB, Redis, and Kafka teams
 - Open Source Community
+
+---
+
+**Made with ❤️ using React, Node.js, and Docker**

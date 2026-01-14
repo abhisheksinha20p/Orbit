@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { projectService } from '../services/projectService';
 import { technologyService } from '../services/technologyService';
-import { Plus, Search, Trash2, Edit } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
+import ProjectCard from '../components/ProjectCard';
+import Modal from '../components/Modal';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 export default function Projects() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editingProject, setEditingProject] = useState(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery(['projects', search, status], () =>
@@ -21,11 +24,21 @@ export default function Projects() {
     onSuccess: () => {
       queryClient.invalidateQueries('projects');
       setShowModal(false);
+      toast.success('Project created successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to create project');
     }
   });
 
   const deleteMutation = useMutation(projectService.deleteProject, {
-    onSuccess: () => queryClient.invalidateQueries('projects')
+    onSuccess: () => {
+      queryClient.invalidateQueries('projects');
+      toast.success('Project deleted successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to delete project');
+    }
   });
 
   const handleSubmit = (e) => {
@@ -41,110 +54,161 @@ export default function Projects() {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Project
-        </button>
-      </div>
-
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search projects..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+      >
+        <div>
+          <h1 className="text-4xl font-bold text-white mb-2">Projects</h1>
+          <p className="text-white/70">Manage and track all your projects</p>
         </div>
-        <select
-          className="px-4 py-2 border border-gray-300 rounded-md"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowModal(true)}
+          className="btn-primary flex items-center"
         >
-          <option value="">All Status</option>
-          <option value="planning">Planning</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-          <option value="archived">Archived</option>
-        </select>
-      </div>
+          <Plus className="w-5 h-5 mr-2" />
+          New Project
+        </motion.button>
+      </motion.div>
 
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="glass-card"
+      >
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+            <input
+              type="text"
+              placeholder="Search projects..."
+              className="input-glass w-full pl-12"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select
+            className="input-glass sm:w-48"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="planning">Planning</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </motion.div>
+
+      {/* Projects Grid */}
       {isLoading ? (
-        <div className="text-center py-12">Loading...</div>
-      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.data?.map((project) => (
-            <div key={project._id} className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{project.name}</h3>
-              <p className="text-gray-600 text-sm mb-4">{project.description}</p>
-              <div className="flex items-center justify-between">
-                <span className={`px-2 py-1 text-xs rounded ${
-                  project.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {project.status}
-                </span>
-                <button
-                  onClick={() => deleteMutation.mutate(project._id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="glass-card h-48 skeleton shimmer" />
           ))}
         </div>
+      ) : data?.data?.length > 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {data.data.map((project, index) => (
+            <motion.div
+              key={project._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <ProjectCard project={project} onDelete={deleteMutation.mutate} />
+            </motion.div>
+          ))}
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="glass-card text-center py-16"
+        >
+          <div className="text-white/50 mb-4">
+            <Plus className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg">No projects found</p>
+            <p className="text-sm mt-2">Create your first project to get started!</p>
+          </div>
+          <button onClick={() => setShowModal(true)} className="btn-primary mt-4">
+            <Plus className="w-5 h-5 mr-2 inline" />
+            Create Project
+          </button>
+        </motion.div>
       )}
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Create Project</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                name="name"
-                placeholder="Project Name"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              <textarea
-                name="description"
-                placeholder="Description"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                rows={3}
-              />
-              <select name="status" className="w-full px-3 py-2 border border-gray-300 rounded-md">
-                <option value="planning">Planning</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-              </select>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 py-2 bg-primary text-white rounded-md hover:bg-blue-600"
-                >
-                  Create
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+      {/* Create Project Modal */}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Create New Project">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+            <input
+              name="name"
+              placeholder="Enter project name"
+              required
+              className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              name="description"
+              placeholder="Enter project description"
+              required
+              className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent resize-none"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select
+              name="status"
+              className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
+            >
+              <option value="planning">Planning</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={createMutation.isLoading}
+              className="flex-1 bg-gradient-primary text-white py-3 rounded-xl font-semibold hover:shadow-neon transition-all disabled:opacity-50"
+            >
+              {createMutation.isLoading ? 'Creating...' : 'Create Project'}
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+            >
+              Cancel
+            </motion.button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

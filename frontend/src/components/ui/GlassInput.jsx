@@ -52,7 +52,7 @@ const GlassInput = forwardRef(({
 
             <div className="relative">
                 {Icon && (
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <div className={`absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 ${label ? 'mt-2' : ''}`}>
                         <Icon className="w-5 h-5" />
                     </div>
                 )}
@@ -68,10 +68,10 @@ const GlassInput = forwardRef(({
                     onBlur={() => setIsFocused(false)}
                     className={`
             w-full
-            bg-white/20 backdrop-blur-md
-            border border-white/30
+            bg-white/5 backdrop-blur-md
+            border border-white/10
             rounded-xl
-            text-gray-900 placeholder-gray-500
+            text-white placeholder-gray-400
             transition-all duration-300
             focus:outline-none focus:ring-2 focus:ring-orbit-blue/50 focus:border-orbit-blue/50
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -87,7 +87,7 @@ const GlassInput = forwardRef(({
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors ${label ? 'mt-2' : ''}`}
                         tabIndex={-1}
                     >
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -95,7 +95,7 @@ const GlassInput = forwardRef(({
                 )}
 
                 {SuffixIcon && !isPassword && (
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 ${label ? 'mt-2' : ''}`}>
                         <SuffixIcon className="w-5 h-5" />
                     </div>
                 )}

@@ -91,7 +91,6 @@ export default function Login() {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             icon={Mail}
             required
-            className="bg-white/10"
           />
 
           <GlassInput
@@ -102,7 +101,6 @@ export default function Login() {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             icon={Lock}
             required
-            className="bg-white/10"
           />
 
           {/* Submit Button */}

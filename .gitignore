@@ -35,3 +35,6 @@ Thumbs.db
 # Misc
 *.pem
 .cache/
+
+# Documentation
+docs/

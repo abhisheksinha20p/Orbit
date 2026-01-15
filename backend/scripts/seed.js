@@ -14,6 +14,15 @@ const seedData = async () => {
             throw new Error("MONGODB_URI is not defined in the environment variables");
         }
 
+        // Safety check for production
+        if (process.env.NODE_ENV === 'production') {
+            console.error('CRITICAL: Attempting to run seed script in production environment!');
+            console.error('This will delete all existing data. If you are sure, use --force flag.');
+            if (!process.argv.includes('--force')) {
+                process.exit(1);
+            }
+        }
+
         await mongoose.connect(mongoValue);
         console.log('Connected to MongoDB');
 
@@ -29,78 +38,71 @@ const seedData = async () => {
             { name: 'Node.js', category: 'backend', version: '18.x', icon: 'node-icon' },
             { name: 'MongoDB', category: 'database', version: '6.0', icon: 'mongo-icon' },
             { name: 'Docker', category: 'devops', version: 'latest', icon: 'docker-icon' },
-            { name: 'AWS', category: 'devops', version: 'latest', icon: 'aws-icon' }
+            { name: 'AWS', category: 'devops', version: 'latest', icon: 'aws-icon' },
+            { name: 'Python', category: 'backend', version: '3.9', icon: 'python-icon' },
+            { name: 'PostgreSQL', category: 'database', version: '15', icon: 'postgres-icon' },
+            { name: 'Redis', category: 'database', version: '7', icon: 'redis-icon' }
         ]);
 
-        // Create Users
-        // Hashing handled by pre-save hook in User model, but for seed we might need to be careful if using insertMany vs create.
-        // User.create triggers save middleware.
         const hashedPassword = 'password123';
+        const users = [];
 
-        const users = await User.create([
-            {
-                name: 'Admin User',
-                email: 'admin@example.com',
-                password: hashedPassword,
-                role: 'admin'
-            },
-            {
-                name: 'Jane Doe',
-                email: 'jane@example.com',
+        // Create Admin
+        users.push({
+            name: 'Admin User',
+            email: 'admin@example.com',
+            password: hashedPassword,
+            role: 'admin'
+        });
+
+        // Generate 100 Users
+        for (let i = 1; i <= 100; i++) {
+            users.push({
+                name: `User ${i}`,
+                email: `user${i}@example.com`,
                 password: hashedPassword,
                 role: 'user'
-            },
-            {
-                name: 'John Smith',
-                email: 'john@example.com',
-                password: hashedPassword,
-                role: 'user'
-            }
-        ]);
+            });
+        }
 
-        // Create Projects
-        await Project.create([
-            {
-                name: 'E-Commerce Platform',
-                description: 'A full-stack e-commerce solution with payment integration.',
-                status: 'active',
-                deploymentStatus: {
-                    environment: 'production',
-                    url: 'https://shop-example.com',
-                    lastDeployed: new Date(),
-                    health: 'healthy'
-                },
-                technologies: [technologies[0]._id, technologies[1]._id, technologies[2]._id], // React, Node, Mongo
-                deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-                createdBy: users[0]._id
-            },
-            {
-                name: 'Internal Dashboard',
-                description: 'Analytics dashboard for internal team use.',
-                status: 'planning',
-                technologies: [technologies[0]._id, technologies[3]._id], // React, Docker
-                deploymentStatus: {
-                    environment: 'staging',
-                    url: 'https://staging.dashboard.internal',
-                    lastDeployed: new Date(Date.now() - 24 * 60 * 60 * 1000),
-                    health: 'healthy'
-                },
-                createdBy: users[1]._id
-            },
-            {
-                name: 'Legacy Migration',
-                description: 'Migrating legacy monolith to microservices.',
-                status: 'completed',
-                technologies: [technologies[1]._id, technologies[2]._id, technologies[4]._id],
-                deploymentStatus: {
-                    environment: 'production',
-                    url: 'https://api.legacy-migrated.com',
-                    lastDeployed: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-                    health: 'healthy'
-                },
-                createdBy: users[0]._id
+        const createdUsers = await User.create(users);
+        console.log(`Created ${createdUsers.length} users`);
+
+        // Generate 100 Projects
+        const projects = [];
+        const statuses = ['planning', 'active', 'completed', 'archived'];
+        const environments = ['development', 'staging', 'production'];
+        const healths = ['healthy', 'degraded', 'down'];
+
+        for (let i = 1; i <= 100; i++) {
+            const randomUser = createdUsers[Math.floor(Math.random() * createdUsers.length)];
+            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            const randomTechs = [];
+            // Pick 1-3 random technologies
+            const numTechs = Math.floor(Math.random() * 3) + 1;
+            for (let j = 0; j < numTechs; j++) {
+                const tech = technologies[Math.floor(Math.random() * technologies.length)];
+                if (!randomTechs.includes(tech._id)) randomTechs.push(tech._id);
             }
-        ]);
+
+            projects.push({
+                name: `Project ${i} - ${randomStatus.toUpperCase()}`,
+                description: `Auto-generated project number ${i}. This is a description for the project which serves as a placeholder.`,
+                status: randomStatus,
+                deploymentStatus: {
+                    environment: environments[Math.floor(Math.random() * environments.length)],
+                    url: `https://project-${i}.example.com`,
+                    lastDeployed: new Date(Date.now() - Math.floor(Math.random() * 10000000000)),
+                    health: healths[Math.floor(Math.random() * healths.length)]
+                },
+                technologies: randomTechs,
+                deadline: new Date(Date.now() + Math.floor(Math.random() * 10000000000)),
+                createdBy: randomUser._id
+            });
+        }
+
+        await Project.create(projects);
+        console.log(`Created ${projects.length} projects`);
 
         console.log('Data Seeded Successfully');
         process.exit(0);

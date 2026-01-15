@@ -382,6 +382,7 @@ Comprehensive documentation available in the `docs/` folder:
 - **[TECH_STACK.md](docs/TECH_STACK.md)** - Technology decisions
 - **[PROJECT_SUMMARY.md](docs/PROJECT_SUMMARY.md)** - Project overview
 - **[PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)** - Codebase structure
+- **[PRODUCTION_READY_SUMMARY.md](docs/PRODUCTION_READY_SUMMARY.md)** - Production ready summary
 
 ## 🚀 Deployment
 
@@ -397,7 +398,7 @@ docker-compose -f docker-compose.prod.yml up -d --build
 
 ### Manual Deployment
 
-See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed production deployment instructions.
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed production deployment instructions. For Docker configuration, see [DOCKER_CONFIGURATION_GUIDE.md](docs/DOCKER_CONFIGURATION_GUIDE.md).
 
 ## 🤝 Contributing
 

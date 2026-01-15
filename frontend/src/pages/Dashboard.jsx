@@ -1,242 +1,171 @@
+import React from 'react';
 import { useQuery } from 'react-query';
-import { projectService } from '../services/projectService';
-import { technologyService } from '../services/technologyService';
-import { Folder, Cpu, TrendingUp, Activity, Clock, CheckCircle } from 'lucide-react';
-import StatCard from '../components/StatCard';
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { FolderKanban, Users, Code2, TrendingUp } from 'lucide-react';
+import MetricCard from '../components/features/MetricCard';
+import ChartCard from '../components/features/ChartCard';
+import SkeletonLoader from '../components/ui/SkeletonLoader';
+import GlassCard from '../components/ui/GlassCard';
+import { projectService } from '../services/projectService';
+import { staggerContainer, staggerItem } from '../utils/animations';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function Dashboard() {
-  const { data: projects } = useQuery('projects', () => projectService.getProjects({}));
-  const { data: technologies } = useQuery('technologies', () => technologyService.getTechnologies({}));
+const Dashboard = () => {
+  /*
+   * Real Backend Integration:
+   * Computing metrics from fetched projects data since no dedicated analytics API exists yet.
+   */
+  const { data: response, isLoading, isError } = useQuery(
+    'dashboard-projects',
+    () => projectService.getProjects({ limit: 100 }), // Fetch more to compute stats
+    { staleTime: 60000 }
+  );
 
-  const projectsData = projects?.data || [];
-  const techData = technologies?.data || [];
+  const projects = response?.data || [];
 
-  // Calculate stats
-  const totalProjects = projectsData.length;
-  const activeProjects = projectsData.filter(p => p.status === 'active').length;
-  const completedProjects = projectsData.filter(p => p.status === 'completed').length;
-  const totalTechnologies = techData.length;
+  // 1. Calculate Metrics
+  const totalProjects = projects.length;
 
-  // Project status distribution for pie chart
-  const statusDistribution = [
-    { name: 'Active', value: projectsData.filter(p => p.status === 'active').length, color: '#10b981' },
-    { name: 'Planning', value: projectsData.filter(p => p.status === 'planning').length, color: '#f59e0b' },
-    { name: 'Completed', value: projectsData.filter(p => p.status === 'completed').length, color: '#3b82f6' },
-    { name: 'Archived', value: projectsData.filter(p => p.status === 'archived').length, color: '#6b7280' },
-  ].filter(item => item.value > 0);
+  const completedProjects = projects.filter(p => p.status === 'completed').length;
+  const completionRate = totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0;
 
-  // Technology category distribution for bar chart
-  const techCategories = ['frontend', 'backend', 'database', 'devops'];
-  const techDistribution = techCategories.map(category => ({
-    name: category.charAt(0).toUpperCase() + category.slice(1),
-    count: techData.filter(t => t.category === category).length,
-  }));
+  // Unique technologies
+  const uniqueTechs = new Set();
+  projects.forEach(p => {
+    if (p.technologies) {
+      p.technologies.forEach(t => uniqueTechs.add(typeof t === 'object' ? t._id : t));
+    }
+  });
+  const totalTechnologies = uniqueTechs.size;
 
-  // Mock timeline data for line chart
-  const timelineData = [
-    { month: 'Jan', projects: 5 },
-    { month: 'Feb', projects: 8 },
-    { month: 'Mar', projects: 12 },
-    { month: 'Apr', projects: 15 },
-    { month: 'May', projects: 18 },
-    { month: 'Jun', projects: totalProjects },
+  // Unique Team Members (creators)
+  const uniqueMembers = new Set();
+  projects.forEach(p => {
+    if (p.createdBy) uniqueMembers.add(typeof p.createdBy === 'object' ? p.createdBy._id : p.createdBy);
+  });
+  const totalMembers = uniqueMembers.size > 0 ? uniqueMembers.size : 1; // At least current user
+
+  const metrics = [
+    { title: 'Total Projects', value: totalProjects, icon: FolderKanban },
+    { title: 'Team Members', value: totalMembers, icon: Users },
+    { title: 'Unique Technologies', value: totalTechnologies, icon: Code2 },
+    { title: 'Completion Rate', value: completionRate, icon: TrendingUp, trend: 'up', suffix: '%' },
   ];
+
+  // 2. Generate Chart Data (Group by Month)
+  const chartDataMap = new Map();
+  projects.forEach(p => {
+    const date = new Date(p.createdAt);
+    const month = date.toLocaleString('default', { month: 'short' });
+    if (!chartDataMap.has(month)) {
+      chartDataMap.set(month, { name: month, projects: 0, completed: 0 });
+    }
+    const data = chartDataMap.get(month);
+    data.projects += 1;
+    if (p.status === 'completed') data.completed += 1;
+  });
+
+  // Convert Map to Array and sort by month index (simplified for now, just reversing if recent first)
+  const chartData = Array.from(chartDataMap.values()).reverse(); // Backend returns desc, so reverse/sort as needed
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        {/* Header Skeleton */}
+        <div className="space-y-2">
+          <div className="h-8 bg-white/20 rounded-lg w-1/4 shimmer" />
+          <div className="h-4 bg-white/20 rounded-lg w-1/2 shimmer" />
+        </div>
+
+        {/* Metrics Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <SkeletonLoader variant="metric" count={4} />
+        </div>
+
+        {/* Charts Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonLoader variant="chart" count={2} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <GlassCard className="text-center py-12 border-red-500/30">
+        <p className="text-red-400">Failed to load dashboard data.</p>
+      </GlassCard>
+    );
+  }
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card"
-      >
-        <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-white/70">Welcome back! Here's what's happening with your projects.</p>
-      </motion.div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          name="Total Projects"
-          value={totalProjects}
-          icon={Folder}
-          gradient="primary"
-          trend={12}
-        />
-        <StatCard
-          name="Active Projects"
-          value={activeProjects}
-          icon={Activity}
-          gradient="success"
-          trend={8}
-        />
-        <StatCard
-          name="Completed"
-          value={completedProjects}
-          icon={CheckCircle}
-          gradient="secondary"
-          trend={-3}
-        />
-        <StatCard
-          name="Technologies"
-          value={totalTechnologies}
-          icon={Cpu}
-          gradient="primary"
-          trend={15}
-        />
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+        <p className="text-gray-400">Welcome back! Here's what's happening with your projects.</p>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Project Status Distribution */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="glass-card"
-        >
-          <h3 className="text-xl font-bold text-white mb-6">Project Status Distribution</h3>
-          {statusDistribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={statusDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {statusDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-white/50">
-              No project data available
-            </div>
-          )}
-        </motion.div>
+      {/* Metrics Grid */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        {metrics.map((metric, index) => (
+          <motion.div key={index} variants={staggerItem}>
+            <MetricCard {...metric} />
+          </motion.div>
+        ))}
+      </motion.div>
 
-        {/* Technology Distribution */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-card"
-        >
-          <h3 className="text-xl font-bold text-white mb-6">Technology Categories</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={techDistribution}>
-              <XAxis dataKey="name" stroke="#fff" opacity={0.7} />
-              <YAxis stroke="#fff" opacity={0.7} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                }}
-              />
-              <Bar dataKey="count" fill="url(#colorGradient)" radius={[8, 8, 0, 0]} />
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="Project Growth">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData}>
               <defs>
-                <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#667eea" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#764ba2" stopOpacity={1} />
+                <linearGradient id="colorProjects" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-            </BarChart>
-          </ResponsiveContainer>
-        </motion.div>
-
-        {/* Project Timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="glass-card lg:col-span-2"
-        >
-          <h3 className="text-xl font-bold text-white mb-6">Project Growth Timeline</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={timelineData}>
-              <XAxis dataKey="month" stroke="#fff" opacity={0.7} />
-              <YAxis stroke="#fff" opacity={0.7} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis dataKey="name" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px'
                 }}
               />
-              <Line
-                type="monotone"
-                dataKey="projects"
-                stroke="#4facfe"
-                strokeWidth={3}
-                dot={{ fill: '#4facfe', r: 6 }}
-                activeDot={{ r: 8 }}
-              />
-            </LineChart>
+              <Area type="monotone" dataKey="projects" stroke="#3b82f6" fillOpacity={1} fill="url(#colorProjects)" />
+            </AreaChart>
           </ResponsiveContainer>
-        </motion.div>
-      </div>
+        </ChartCard>
 
-      {/* Recent Projects */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="glass-card"
-      >
-        <h3 className="text-xl font-bold text-white mb-6">Recent Projects</h3>
-        <div className="space-y-3">
-          {projectsData.slice(0, 5).map((project, index) => (
-            <motion.div
-              key={project._id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 * index }}
-              className="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <Folder className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">{project.name}</h4>
-                  <p className="text-white/60 text-sm">{project.description}</p>
-                </div>
-              </div>
-              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${project.status === 'active' ? 'bg-green-500/20 text-green-300' :
-                  project.status === 'completed' ? 'bg-blue-500/20 text-blue-300' :
-                    'bg-yellow-500/20 text-yellow-300'
-                }`}>
-                {project.status}
-              </span>
-            </motion.div>
-          ))}
-          {projectsData.length === 0 && (
-            <div className="text-center py-8 text-white/50">
-              No projects yet. Create your first project to get started!
-            </div>
-          )}
-        </div>
-      </motion.div>
+        <ChartCard title="Project Completion">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis dataKey="name" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px'
+                }}
+              />
+              <Bar dataKey="completed" fill="#8b5cf6" radius={[8, 8, 0, 0]} name="Completed" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

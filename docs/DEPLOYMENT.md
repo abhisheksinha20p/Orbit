@@ -1,12 +1,31 @@
 # Deployment Guide
 
+This comprehensive guide covers deploying the Orbit Project Tracking System to production environments using various deployment strategies.
+
+## Table of Contents
+
+1. [Prerequisites](#prerequisites)
+2. [Environment Configuration](#environment-configuration)
+3. [Docker Deployment (Recommended)](#docker-deployment-recommended)
+4. [Cloud Deployment](#cloud-deployment)
+5. [Monitoring & Maintenance](#monitoring--maintenance)
+6. [Security Best Practices](#security-best-practices)
+7. [Troubleshooting](#troubleshooting)
+
 ## Prerequisites
 
-- AWS Account with EC2 access
-- Vercel Account
-- MongoDB Atlas Account
-- Domain name (optional)
+### Required Accounts & Services
+- Docker & Docker Compose installed
+- MongoDB Atlas Account (or self-hosted MongoDB)
+- Domain name (optional but recommended)
 - GitHub repository
+- Cloud provider account (AWS/GCP/Azure) or Vercel for frontend
+
+### System Requirements
+- **Development**: 4GB RAM, 2 CPU cores
+- **Production**: 8GB RAM, 4 CPU cores (minimum)
+- **Storage**: 20GB minimum
+- **OS**: Ubuntu 22.04 LTS (recommended) or any Docker-compatible OS
 
 ## 1. MongoDB Atlas Setup
 
@@ -246,38 +265,531 @@ Push to main branch triggers:
 2. Build applications
 3. Deploy to production
 
-## 5. Docker Deployment (Alternative)
+## 5. Docker Deployment (Recommended for Development)
 
-### Build Images
+### Prerequisites
+
+```bash
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verify installation
+docker --version
+docker-compose --version
+```
+
+### Development Environment Setup
+
+#### 1. Clone Repository
+
+```bash
+git clone <your-repo-url> orbit
+cd orbit
+```
+
+#### 2. Configure Environment Variables
+
+**Backend (.env in backend/):**
+```env
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb://mongodb:27017/orbit
+JWT_SECRET=your-development-secret-key-change-in-production
+REDIS_HOST=redis
+REDIS_PORT=6379
+KAFKA_BROKERS=kafka:9092
+CORS_ORIGIN=http://localhost:3001
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+```
+
+**Frontend (.env in frontend/):**
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+#### 3. Start Services with Docker Compose
+
+```bash
+# Start all services (frontend, backend, MongoDB, Redis, Kafka)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f frontend
+docker-compose logs -f backend
+
+# Check service status
+docker-compose ps
+```
+
+#### 4. Access Applications
+
+- **Frontend**: http://localhost:3001
+- **Backend API**: http://localhost:5000
+- **API Health Check**: http://localhost:5000/api/v1/health
+- **MongoDB**: localhost:27017
+- **Redis**: localhost:6379
+- **Kafka**: localhost:9092
+
+#### 5. Development Workflow
+
+```bash
+# Stop services
+docker-compose stop
+
+# Start services
+docker-compose start
+
+# Restart specific service
+docker-compose restart backend
+
+# Rebuild after code changes
+docker-compose up -d --build
+
+# Stop and remove containers
+docker-compose down
+
+# Stop and remove containers + volumes (clean slate)
+docker-compose down -v
+```
+
+### Production Environment Setup
+
+#### 1. Production Docker Compose
+
+Create `docker-compose.prod.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - VITE_API_URL=https://api.yourdomain.com/api
+    restart: unless-stopped
+    networks:
+      - orbit-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI_PROD}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_HOST=redis
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - mongodb
+      - redis
+      - kafka
+    restart: unless-stopped
+    networks:
+      - orbit-network
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - orbit-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - orbit-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+    networks:
+      - orbit-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    restart: unless-stopped
+    networks:
+      - orbit-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  orbit-network:
+    driver: bridge
+```
+
+#### 2. Production Environment Variables
+
+Create `.env.prod`:
+
+```env
+# MongoDB
+MONGO_USERNAME=orbit_admin
+MONGO_PASSWORD=<strong-password>
+MONGODB_URI_PROD=mongodb://orbit_admin:<strong-password>@mongodb:27017/orbit?authSource=admin
+
+# Backend
+JWT_SECRET=<generate-strong-secret-256-bit>
+NODE_ENV=production
+
+# Frontend
+VITE_API_URL=https://api.yourdomain.com/api
+```
+
+#### 3. Deploy to Production
+
+```bash
+# Build images
+docker-compose -f docker-compose.prod.yml build
+
+# Start services
+docker-compose -f docker-compose.prod.yml up -d
+
+# Check status
+docker-compose -f docker-compose.prod.yml ps
+
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+### Docker Image Management
+
+#### Build Individual Images
 
 ```bash
 # Backend
 cd backend
-docker build -t orbit-backend .
+docker build -t orbit-backend:latest .
+docker build -t orbit-backend:v2.0.0 .
 
 # Frontend
 cd frontend
-docker build -t orbit-frontend .
+docker build -t orbit-frontend:latest .
+docker build -t orbit-frontend:v2.0.0 .
 ```
 
-### Push to Registry
+#### Push to Docker Registry
 
 ```bash
-# Tag images
-docker tag orbit-backend:latest <your-registry>/orbit-backend:latest
-docker tag orbit-frontend:latest <your-registry>/orbit-frontend:latest
+# Tag for Docker Hub
+docker tag orbit-backend:latest yourusername/orbit-backend:latest
+docker tag orbit-frontend:latest yourusername/orbit-frontend:latest
 
-# Push
-docker push <your-registry>/orbit-backend:latest
-docker push <your-registry>/orbit-frontend:latest
+# Push to Docker Hub
+docker login
+docker push yourusername/orbit-backend:latest
+docker push yourusername/orbit-frontend:latest
+
+# Or tag for AWS ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
+docker tag orbit-backend:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/orbit-backend:latest
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/orbit-backend:latest
 ```
 
-### Deploy with Docker Compose
+### Container Management
+
+#### Useful Docker Commands
 
 ```bash
-# On server
-docker-compose -f docker-compose.prod.yml up -d
+# List running containers
+docker ps
+
+# List all containers
+docker ps -a
+
+# View container logs
+docker logs <container-id>
+docker logs -f <container-id>  # Follow logs
+
+# Execute command in container
+docker exec -it <container-id> bash
+docker exec -it <container-id> sh
+
+# View container resource usage
+docker stats
+
+# Inspect container
+docker inspect <container-id>
+
+# Remove stopped containers
+docker container prune
+
+# Remove unused images
+docker image prune
+
+# Remove all unused data
+docker system prune -a
 ```
+
+#### Docker Compose Commands
+
+```bash
+# Scale services
+docker-compose up -d --scale backend=3
+
+# Update service
+docker-compose up -d --no-deps --build backend
+
+# View service logs
+docker-compose logs -f --tail=100 backend
+
+# Execute command in service
+docker-compose exec backend npm run seed
+
+# Stop specific service
+docker-compose stop backend
+
+# Remove service
+docker-compose rm backend
+```
+
+### Health Checks
+
+Add health checks to docker-compose.yml:
+
+```yaml
+services:
+  backend:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mongodb:
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  redis:
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+```
+
+### Troubleshooting Docker Deployment
+
+#### Container Won't Start
+
+```bash
+# Check logs
+docker-compose logs backend
+
+# Check if port is in use
+sudo lsof -i :5000
+sudo netstat -tulpn | grep 5000
+
+# Restart service
+docker-compose restart backend
+
+# Rebuild and restart
+docker-compose up -d --build --force-recreate backend
+```
+
+#### Database Connection Issues
+
+```bash
+# Check MongoDB container
+docker-compose logs mongodb
+
+# Test MongoDB connection
+docker-compose exec mongodb mongosh --eval "db.adminCommand('ping')"
+
+# Check network
+docker network ls
+docker network inspect orbit_orbit-network
+```
+
+#### Redis Connection Issues
+
+```bash
+# Check Redis container
+docker-compose logs redis
+
+# Test Redis connection
+docker-compose exec redis redis-cli ping
+
+# Check Redis keys
+docker-compose exec redis redis-cli keys '*'
+```
+
+#### Volume Issues
+
+```bash
+# List volumes
+docker volume ls
+
+# Inspect volume
+docker volume inspect orbit_mongodb_data
+
+# Remove volumes (WARNING: deletes data)
+docker-compose down -v
+
+# Backup volume
+docker run --rm -v orbit_mongodb_data:/data -v $(pwd):/backup alpine tar czf /backup/mongodb-backup.tar.gz /data
+```
+
+#### Network Issues
+
+```bash
+# List networks
+docker network ls
+
+# Inspect network
+docker network inspect orbit_orbit-network
+
+# Recreate network
+docker-compose down
+docker network rm orbit_orbit-network
+docker-compose up -d
+```
+
+### Performance Optimization
+
+#### Resource Limits
+
+Add to docker-compose.yml:
+
+```yaml
+services:
+  backend:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  mongodb:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+```
+
+#### Logging Configuration
+
+```yaml
+services:
+  backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+### Backup and Restore
+
+#### Backup MongoDB
+
+```bash
+# Backup
+docker-compose exec mongodb mongodump --out=/backup
+docker cp orbit_mongodb_1:/backup ./mongodb-backup
+
+# Or use volume backup
+docker run --rm -v orbit_mongodb_data:/data -v $(pwd):/backup alpine tar czf /backup/mongodb-$(date +%Y%m%d).tar.gz /data
+```
+
+#### Restore MongoDB
+
+```bash
+# Restore from dump
+docker cp ./mongodb-backup orbit_mongodb_1:/backup
+docker-compose exec mongodb mongorestore /backup
+
+# Or restore from volume backup
+docker run --rm -v orbit_mongodb_data:/data -v $(pwd):/backup alpine tar xzf /backup/mongodb-20260115.tar.gz -C /
+```
+
+### Security Best Practices
+
+1. **Use secrets for sensitive data**
+2. **Don't expose unnecessary ports**
+3. **Use non-root users in containers**
+4. **Scan images for vulnerabilities**
+5. **Keep images updated**
+6. **Use specific image tags, not 'latest'**
+7. **Enable Docker Content Trust**
+
+```bash
+# Scan image for vulnerabilities
+docker scan orbit-backend:latest
+
+# Enable Docker Content Trust
+export DOCKER_CONTENT_TRUST=1
+```
+
+### Monitoring Docker Containers
+
+```bash
+# Real-time stats
+docker stats
+
+# Container resource usage
+docker-compose top
+
+# System-wide information
+docker system df
+
+# Events
+docker events
+
+# With monitoring tools
+docker run -d -p 9090:9090 -v /var/run/docker.sock:/var/run/docker.sock google/cadvisor
+```
+
 
 ## 6. Monitoring Setup
 

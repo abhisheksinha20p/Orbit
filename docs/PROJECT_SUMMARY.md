@@ -64,29 +64,52 @@ backend/
 - **Location**: `frontend/`
 - **Features**:
   - React 18 with Vite
-  - Tailwind CSS styling
+  - **Orbit Glassmorphism UI Design System**
+  - Tailwind CSS with custom configuration
+  - Framer Motion animations throughout
   - Zustand state management
   - React Query for data fetching
-  - Protected routes
-  - Authentication flow
-  - Project CRUD operations
-  - Technology management
-  - Search and filtering
-  - Responsive design
+  - React Hook Form for form handling
+  - React Hot Toast notifications
+  - Recharts for data visualization
+  - Protected routes with authentication
+  - Responsive design (mobile-first)
+  - 10+ reusable UI components
+  - Complete layout system
+
+**Component Library:**
+- **UI Components**: GlassCard, PrimaryButton, SecondaryButton, GlassInput, GlassTextarea, GlassSelect, Modal, Loader, Toast, Badge
+- **Layout Components**: Sidebar, MobileSidebar, Topbar, Layout
+- **Feature Components**: MetricCard, ChartCard, DataTable
+
+**Pages:**
+- Login/Register with glassmorphism
+- Dashboard with animated metrics and charts
+- Projects with grid/list view toggle
+- Analytics with performance charts
+- Technologies management
+- Settings with profile and preferences
+- 404 and 500 error pages
 
 **File Structure:**
 ```
 frontend/
 ├── src/
-│   ├── components/      # Reusable UI components
-│   ├── pages/           # Route pages
-│   ├── services/        # API integration
-│   ├── store/           # State management
-│   ├── App.jsx          # Main app component
-│   └── main.jsx         # Entry point
+│   ├── components/
+│   │   ├── ui/             # Core UI primitives (10 components)
+│   │   ├── layout/         # Layout components (4 components)
+│   │   └── features/       # Feature-specific components
+│   ├── pages/              # Route pages (9 pages)
+│   ├── services/           # API integration
+│   ├── store/              # Zustand state management
+│   ├── hooks/              # Custom React hooks
+│   ├── utils/              # Utilities (animations, formatters, validators)
+│   ├── App.jsx             # Main app component
+│   └── main.jsx            # Entry point
 ├── package.json
 ├── Dockerfile
 ├── nginx.conf
+├── tailwind.config.js      # Custom Orbit configuration
 └── .env.example
 ```
 

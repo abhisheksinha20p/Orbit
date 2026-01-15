@@ -1,26 +1,46 @@
 # Orbit - Project Tracking System
 
-A modern, streamlined project tracking system with a stunning glassmorphism UI, designed to help teams and individuals monitor tasks, manage deadlines, and visualize progress in real-time.
+![Orbit Logo](frontend/public/orbit-logo.png)
 
-![Orbit Dashboard](https://img.shields.io/badge/Status-Active-success)
-![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+**Keep your projects in alignment.**
+
+A modern, production-ready project tracking system with a stunning **Orbit Glassmorphism UI**, designed to help teams and individuals monitor tasks, manage deadlines, and visualize progress in real-time.
+
+![Orbit Dashboard](https://img.shields.io/badge/Status-Production%20Ready-success)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## ✨ Features
 
-### 🎨 Modern UI/UX
-- **Glassmorphism Design** - Stunning glass-effect UI with vibrant gradients
-- **Interactive Dashboard** - Real-time analytics with Pie, Bar, and Line charts
-- **Responsive Design** - Seamless experience across desktop, tablet, and mobile
-- **Smooth Animations** - Framer Motion powered transitions and micro-interactions
-- **Dark Mode Ready** - Beautiful gradient backgrounds with glassmorphism effects
+### 🎨 Orbit Glassmorphism UI Design System
+- **Translucent Backgrounds** - Frosted glass effect with backdrop blur
+- **Electric Blue & Vibrant Purple** - Custom gradient color palette (#3b82f6, #8b5cf6)
+- **Animated Floating Orbs** - Dynamic background with orbital motion
+- **Soft Diffused Shadows** - Glass-themed shadow system
+- **10+ Reusable Components** - Complete UI component library
+- **Smooth Framer Motion Animations** - 60fps transitions and micro-interactions
+- **Mobile-First Responsive** - Seamless experience across all devices
+
+### 📦 Component Library
+- **UI Components**: GlassCard, PrimaryButton, SecondaryButton, GlassInput, GlassTextarea, GlassSelect, Modal, Loader, Toast, Badge
+- **Layout Components**: Sidebar (collapsible), MobileSidebar (drawer), Topbar
+- **Feature Components**: MetricCard (with CountUp), ChartCard, DataTable
 
 ### 📊 Project Management
 - **Full CRUD Operations** - Create, read, update, and delete projects
 - **Advanced Filtering** - Search by name, status, or technology
+- **Grid/List View Toggle** - Flexible project visualization
 - **Status Tracking** - Planning, Active, Completed, Archived states
 - **Technology Mapping** - Link projects with multiple technologies
-- **Visual Analytics** - Charts showing project distribution and trends
+- **Visual Analytics** - Interactive charts with Recharts
+- **Progress Tracking** - Animated progress bars
+
+### 📈 Analytics & Insights
+- **Interactive Dashboard** - Real-time metrics with CountUp animations
+- **Multiple Chart Types** - Line, Bar, Area, and Pie charts
+- **Performance Trends** - Historical data visualization
+- **Project Distribution** - Category-based breakdowns
+- **Export Functionality** - Download reports and data
 
 ### 🔐 Security & Performance
 - **JWT Authentication** - Secure token-based authentication
@@ -109,9 +129,9 @@ docker-compose down
 ```
 
 **Access the application:**
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:3001 (dev mode) or http://localhost:3000 (production)
 - Backend API: http://localhost:5000/api/v1
-- MongoDB: mongodb://localhost:21011/orbit
+- MongoDB: mongodb://localhost:27017/orbit
 - Redis: localhost:6379
 - Kafka: localhost:9092
 
@@ -130,6 +150,32 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### Development Mode with Hot Reload
+
+For faster development with instant code changes (no rebuild required):
+
+```bash
+# Start all services in development mode
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# View frontend logs
+docker-compose logs -f frontend
+
+# Stop services
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+```
+
+**Development Mode Features:**
+- ✅ Hot Module Replacement (HMR) - instant code updates
+- ✅ Volume mounts - no container rebuild needed
+- ✅ Vite dev server with fast refresh
+- ✅ Source maps for debugging
+
+**Access the application:**
+- Frontend (Dev): http://localhost:3001
+- Backend API: http://localhost:5000/api/v1
+
 
 ## 🔧 Configuration
 
@@ -384,15 +430,85 @@ npm run test:e2e
 
 ## 📝 Changelog
 
-### v1.0.0 (Latest)
-- ✨ Complete UI redesign with glassmorphism
-- 📊 Added interactive dashboard with charts
-- 🎨 Implemented modern design system
-- ✨ Added framer-motion animations
-- 🍞 Integrated toast notifications
-- 📱 Improved responsive design
-- 🔐 Enhanced security with strong JWT secrets
-- 🐛 Fixed login authentication issues
+### v2.1.0 (Latest - January 2026)
+**Production-Ready Release with Enhanced Performance & Reliability**
+
+- ✨ **Glassmorphism UI Design System**
+  - Translucent backgrounds with backdrop blur effects
+  - Electric blue and vibrant purple color palette
+  - Animated floating gradient orbs
+  - Soft frosted borders and diffused glass shadows
+  
+- 🎨 **Comprehensive Component Library**
+  - 12+ reusable UI components (GlassCard, Buttons, Inputs, Modal, Loader, Toast, Badge, SkeletonLoader)
+  - Complete layout system (Sidebar, MobileSidebar, Topbar)
+  - Feature components (MetricCard, ChartCard, DataTable)
+  - Error Boundary for graceful error handling
+  
+- 📱 **Enhanced Pages**
+  - Login/Register with glassmorphism and form validation
+  - Dashboard with metric cards, CountUp animations, and Recharts
+  - Projects page with grid/list view toggle and search
+  - Analytics page with performance charts and metrics
+  - Technologies management with color-coded cards
+  - Settings page with profile management and preferences
+  - Custom 404 and 500 error pages
+  
+- ⚡ **Performance Optimizations**
+  - Lazy loading with React.lazy() and Suspense
+  - Code splitting for reduced bundle size
+  - Skeleton loaders for better perceived performance
+  - Optimized chart rendering with proper dimensions
+  - React Query caching for reduced API calls
+  
+- 🛡️ **Production-Ready Backend**
+  - Graceful shutdown handling (SIGTERM, SIGINT)
+  - Enhanced security headers with Helmet.js
+  - Request logging with Winston
+  - Uncaught exception and promise rejection handling
+  - Trust proxy configuration for load balancers
+  - Comprehensive error handling
+  
+- 🔧 **State Management & Services**
+  - Zustand stores (auth, UI, user preferences)
+  - React Query for server state management
+  - Axios with interceptors for API calls
+  - Custom hooks (useToast, useMediaQuery)
+  
+- 🛠️ **Utilities & Helpers**
+  - Animation variants library
+  - Data formatters (dates, numbers, currency)
+  - Form validators (email, password, URLs)
+  - Responsive breakpoint hooks
+  - Skeleton loader variants (card, table, chart, metric, list, text)
+  
+- 🎯 **Enhanced Tailwind Configuration**
+  - Custom Orbit color system
+  - Gradient backgrounds (oceanic, nebula, primary)
+  - Glass shadows and backdrop blur utilities
+  - Custom animations and keyframes
+  - Inter font family integration
+  
+- 📦 **Production Environment**
+  - Production environment files for frontend and backend
+  - Docker-ready configuration
+  - Environment-specific configurations
+  - Security best practices implemented
+
+### v2.0.0 (January 2026)
+**Complete Frontend Redesign with Orbit Glassmorphism UI**
+
+- Initial glassmorphism UI implementation
+- Complete component library
+- Dashboard with analytics
+- Project and technology management
+- Authentication system
+
+### v1.0.0
+- � Initial release with interactive dashboard
+- 🍞 Toast notifications
+- 🔐 JWT authentication
+- 🐛 Bug fixes and improvements
 
 ## 📄 License
 

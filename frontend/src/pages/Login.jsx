@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import GlassInput from '../components/ui/GlassInput';
+import OrbitLogo from '../components/ui/OrbitLogo';
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -63,7 +65,7 @@ export default function Login() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="glass-white rounded-3xl p-8 md:p-12 max-w-md w-full relative z-10 shadow-glass-lg"
+        className="glass rounded-3xl p-8 md:p-12 max-w-md w-full relative z-10 shadow-glass-lg"
       >
         {/* Logo & Title */}
         <div className="text-center mb-8">
@@ -71,51 +73,37 @@ export default function Login() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mb-4 shadow-neon"
+            className="flex justify-center mb-4"
           >
-            <Sparkles className="w-8 h-8 text-white" />
+            <OrbitLogo size={80} animated={true} />
           </motion.div>
           <h1 className="text-4xl font-bold gradient-text mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to continue to Orbit</p>
+          <p className="text-gray-300">Sign in to continue to Orbit</p>
         </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                placeholder="you@example.com"
-                required
-                className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-          </div>
+          <GlassInput
+            label="Email Address"
+            type="email"
+            placeholder="you@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            icon={Mail}
+            required
+            className="bg-white/10"
+          />
 
-          {/* Password Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="password"
-                placeholder="••••••••"
-                required
-                className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-          </div>
+          <GlassInput
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            icon={Lock}
+            required
+            className="bg-white/10"
+          />
 
           {/* Submit Button */}
           <motion.button
@@ -123,7 +111,7 @@ export default function Login() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-primary text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-neon transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-primary text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-neon transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
             {loading ? (
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -138,14 +126,14 @@ export default function Login() {
 
         {/* Footer Links */}
         <div className="mt-6 text-center space-y-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-300">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary-600 hover:text-primary-700 font-semibold hover:underline">
+            <Link to="/register" className="text-orbit-blue hover:text-orbit-blue-light font-semibold hover:underline">
               Sign up
             </Link>
           </p>
-          <p className="text-xs text-gray-500">
-            Forgot password? <span className="text-gray-400">Contact admin for reset</span>
+          <p className="text-xs text-gray-400">
+            Forgot password? <span className="text-gray-500">Contact admin for reset</span>
           </p>
         </div>
       </motion.div>

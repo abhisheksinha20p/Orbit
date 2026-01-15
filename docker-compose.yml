@@ -69,7 +69,7 @@ services:
       RATE_LIMIT_MAX_REQUESTS: 100
 
       # CORS
-      CORS_ORIGIN: http://localhost:3000
+      CORS_ORIGIN: http://localhost:3000,http://localhost:3001
     depends_on:
       - mongodb
       - redis
@@ -79,7 +79,10 @@ services:
       - /app/node_modules
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:5000/api/v1
     container_name: orbit-frontend
     ports:
       - "3000:80"

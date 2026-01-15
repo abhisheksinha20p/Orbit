@@ -149,6 +149,10 @@ npm run dev
 cd frontend
 npm install
 npm run dev
+
+# Seed Database (Optional)
+# Populates the database with 100+ sample users and projects
+npm run seed
 ```
 
 ### Development Mode with Hot Reload
